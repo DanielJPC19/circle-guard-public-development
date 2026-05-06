@@ -28,6 +28,12 @@ CREATE TABLE access_points (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE system_settings (
+    id SERIAL PRIMARY KEY,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Indexing for lookup
 CREATE INDEX idx_ap_mac ON access_points(mac_address);
 CREATE INDEX idx_floor_building ON floors(building_id);

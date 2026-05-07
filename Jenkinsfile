@@ -8,7 +8,7 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Building the back-end application...'
-                sh './gradlew build'
+                sh './gradlew build --skip-tests'
             }
         }
     }

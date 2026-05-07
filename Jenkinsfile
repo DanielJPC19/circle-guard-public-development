@@ -16,11 +16,11 @@ pipeline {
     post {
         success {
             echo 'Pipeline completed successfully!'
-            sh 'docker image prune -f' // Eliminar imagenes no utilizadas
+            //sh 'docker image prune -f' // Eliminar imagenes no utilizadas
         }
         failure {
             echo 'Pipeline failed. Please check the logs for details.'
-            sh 'docker compose down || true' // Stop containers without failing
+            //sh 'docker compose down || true' // Stop containers without failing
         }
         always {
             echo 'Cleaning up workspace...'

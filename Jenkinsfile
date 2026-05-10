@@ -43,7 +43,10 @@ pipeline {
                 )]) {
                     sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
                     script {
-                        env.SERVICES.split(" ").each { svc ->
+                        def services = env.SERVICES.split(" ")
+                        for (int i = 0; i < services.size(); i++) {
+                            def svc = services[i]
+                            echo "--- Building ${svc} (${i+1}/${services.size()}) ---"
                             sh """
                                 docker build \\
                                   -t ${env.DOCKERHUB_USER}/circleguard-${svc}:dev \\
@@ -135,7 +138,10 @@ pipeline {
                 )]) {
                     sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
                     script {
-                        env.SERVICES.split(" ").each { svc ->
+                        def services = env.SERVICES.split(" ")
+                        for (int i = 0; i < services.size(); i++) {
+                            def svc = services[i]
+                            echo "--- Building ${svc} (${i+1}/${services.size()}) ---"
                             sh """
                                 docker build \\
                                   -t ${env.DOCKERHUB_USER}/circleguard-${svc}:staging \\
@@ -242,7 +248,10 @@ pipeline {
                     }
                     sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
                     script {
-                        env.SERVICES.split(" ").each { svc ->
+                        def services = env.SERVICES.split(" ")
+                        for (int i = 0; i < services.size(); i++) {
+                            def svc = services[i]
+                            echo "--- Building ${svc} (${i+1}/${services.size()}) ---"
                             sh """
                                 docker build \\
                                   -t ${env.DOCKERHUB_USER}/circleguard-${svc}:latest \\

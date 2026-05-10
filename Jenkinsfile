@@ -63,16 +63,11 @@ pipeline {
         stage("Trigger OPS — DEV") {
             when { branch "develop" }
             steps {
-                withCredentials([string(
-                    credentialsId: "jenkins-ops-trigger-token",
-                    variable: "OPS_TOKEN"
-                )]) {
-                    sh """
-                        curl -f -u "jenkins:\${OPS_TOKEN}" \\
-                          "\${JENKINS_OPS_URL}/job/\${JENKINS_OPS_JOB}/buildWithParameters\
+                sh """
+                    curl -f -X POST \\
+                      "\${JENKINS_OPS_URL}/job/\${JENKINS_OPS_JOB}/buildWithParameters\\
 ?token=\${JENKINS_OPS_TOKEN}&IMAGE_TAG=dev&ENVIRONMENT=development"
-                    """
-                }
+                """
             }
         }
 
@@ -159,16 +154,11 @@ pipeline {
         stage("Trigger OPS — STAGE") {
             when { branch pattern: "release/.*", comparator: "REGEXP" }
             steps {
-                withCredentials([string(
-                    credentialsId: "jenkins-ops-trigger-token",
-                    variable: "OPS_TOKEN"
-                )]) {
-                    sh """
-                        curl -f -u "jenkins:\${OPS_TOKEN}" \\
-                          "\${JENKINS_OPS_URL}/job/\${JENKINS_OPS_JOB}/buildWithParameters\
+                sh """
+                    curl -f -X POST \\
+                      "\${JENKINS_OPS_URL}/job/\${JENKINS_OPS_JOB}/buildWithParameters\\
 ?token=\${JENKINS_OPS_TOKEN}&IMAGE_TAG=staging&ENVIRONMENT=staging"
-                    """
-                }
+                """
             }
         }
 
@@ -357,16 +347,11 @@ ${serviceList}
         stage("Trigger OPS — PROD") {
             when { branch "master" }
             steps {
-                withCredentials([string(
-                    credentialsId: "jenkins-ops-trigger-token",
-                    variable: "OPS_TOKEN"
-                )]) {
-                    sh """
-                        curl -f -u "jenkins:\${OPS_TOKEN}" \\
-                          "\${JENKINS_OPS_URL}/job/\${JENKINS_OPS_JOB}/buildWithParameters\
+                sh """
+                    curl -f -X POST \\
+                      "\${JENKINS_OPS_URL}/job/\${JENKINS_OPS_JOB}/buildWithParameters\\
 ?token=\${JENKINS_OPS_TOKEN}&IMAGE_TAG=${env.SHORT_SHA}&ENVIRONMENT=production"
-                    """
-                }
+                """
             }
         }
 

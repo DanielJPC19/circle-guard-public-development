@@ -33,6 +33,7 @@ subprojects {
         "testAnnotationProcessor"("org.projectlombok:lombok")
         "implementation"("org.jetbrains.kotlin:kotlin-reflect")
         "testImplementation"("org.springframework.boot:spring-boot-starter-test")
+        "testImplementation"("org.mockito.kotlin:mockito-kotlin:5.2.1")
         "testRuntimeOnly"("com.h2database:h2")
     }
 

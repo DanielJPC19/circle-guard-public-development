@@ -42,22 +42,19 @@ pipeline {
                     passwordVariable: "DOCKER_PASS"
                 )]) {
                     sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
+                    sh 'docker system prune -f || true'
                     script {
-                        def parallelBuilds = [:]
                         def servicesList = env.SERVICES.tokenize(' ')
                         for (int i = 0; i < servicesList.size(); i++) {
                             def svc = servicesList[i]
-                            parallelBuilds["${svc}"] = {
-                                sh """
-                                    JAR=\$(find services/circleguard-${svc}/build/libs -name "*.jar" ! -name "*-plain.jar" | head -1)
-                                    docker build --build-arg JAR_FILE=\$JAR \\
-                                      -t ${env.DOCKERHUB_USER}/circleguard-${svc}:dev \\
-                                      -f services/circleguard-${svc}/Dockerfile .
-                                    docker push ${env.DOCKERHUB_USER}/circleguard-${svc}:dev
-                                """
-                            }
+                            sh """
+                                JAR=\$(find services/circleguard-${svc}/build/libs -name "*.jar" ! -name "*-plain.jar" | head -1)
+                                docker build --build-arg JAR_FILE=\$JAR \\
+                                  -t ${env.DOCKERHUB_USER}/circleguard-${svc}:dev \\
+                                  -f services/circleguard-${svc}/Dockerfile .
+                                docker push ${env.DOCKERHUB_USER}/circleguard-${svc}:dev
+                            """
                         }
-                        parallel parallelBuilds
                     }
                 }
             }
@@ -141,22 +138,19 @@ pipeline {
                     passwordVariable: "DOCKER_PASS"
                 )]) {
                     sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
+                    sh 'docker system prune -f || true'
                     script {
-                        def parallelBuilds = [:]
                         def servicesList = env.SERVICES.tokenize(' ')
                         for (int i = 0; i < servicesList.size(); i++) {
                             def svc = servicesList[i]
-                            parallelBuilds["${svc}"] = {
-                                sh """
-                                    JAR=\$(find services/circleguard-${svc}/build/libs -name "*.jar" ! -name "*-plain.jar" | head -1)
-                                    docker build --build-arg JAR_FILE=\$JAR \\
-                                      -t ${env.DOCKERHUB_USER}/circleguard-${svc}:staging \\
-                                      -f services/circleguard-${svc}/Dockerfile .
-                                    docker push ${env.DOCKERHUB_USER}/circleguard-${svc}:staging
-                                """
-                            }
+                            sh """
+                                JAR=\$(find services/circleguard-${svc}/build/libs -name "*.jar" ! -name "*-plain.jar" | head -1)
+                                docker build --build-arg JAR_FILE=\$JAR \\
+                                  -t ${env.DOCKERHUB_USER}/circleguard-${svc}:staging \\
+                                  -f services/circleguard-${svc}/Dockerfile .
+                                docker push ${env.DOCKERHUB_USER}/circleguard-${svc}:staging
+                            """
                         }
-                        parallel parallelBuilds
                     }
                 }
             }
@@ -255,26 +249,23 @@ pipeline {
                         ).trim()
                     }
                     sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
+                    sh 'docker system prune -f || true'
                     script {
-                        def parallelBuilds = [:]
                         def servicesList = env.SERVICES.tokenize(' ')
                         for (int i = 0; i < servicesList.size(); i++) {
                             def svc = servicesList[i]
-                            parallelBuilds["${svc}"] = {
-                                sh """
-                                    JAR=\$(find services/circleguard-${svc}/build/libs -name "*.jar" ! -name "*-plain.jar" | head -1)
-                                    docker build --build-arg JAR_FILE=\$JAR \\
-                                      -t ${env.DOCKERHUB_USER}/circleguard-${svc}:latest \\
-                                      -t ${env.DOCKERHUB_USER}/circleguard-${svc}:v${BUILD_NUMBER} \\
-                                      -t ${env.DOCKERHUB_USER}/circleguard-${svc}:${env.SHORT_SHA} \\
-                                      -f services/circleguard-${svc}/Dockerfile .
-                                    docker push ${env.DOCKERHUB_USER}/circleguard-${svc}:latest
-                                    docker push ${env.DOCKERHUB_USER}/circleguard-${svc}:v${BUILD_NUMBER}
-                                    docker push ${env.DOCKERHUB_USER}/circleguard-${svc}:${env.SHORT_SHA}
-                                """
-                            }
+                            sh """
+                                JAR=\$(find services/circleguard-${svc}/build/libs -name "*.jar" ! -name "*-plain.jar" | head -1)
+                                docker build --build-arg JAR_FILE=\$JAR \\
+                                  -t ${env.DOCKERHUB_USER}/circleguard-${svc}:latest \\
+                                  -t ${env.DOCKERHUB_USER}/circleguard-${svc}:v${BUILD_NUMBER} \\
+                                  -t ${env.DOCKERHUB_USER}/circleguard-${svc}:${env.SHORT_SHA} \\
+                                  -f services/circleguard-${svc}/Dockerfile .
+                                docker push ${env.DOCKERHUB_USER}/circleguard-${svc}:latest
+                                docker push ${env.DOCKERHUB_USER}/circleguard-${svc}:v${BUILD_NUMBER}
+                                docker push ${env.DOCKERHUB_USER}/circleguard-${svc}:${env.SHORT_SHA}
+                            """
                         }
-                        parallel parallelBuilds
                     }
                 }
             }

@@ -60,52 +60,6 @@ pipeline {
             }
         }
 
-        stage("Trigger OPS — DEV") {
-            when { branch "develop" }
-            steps {
-                withCredentials([usernamePassword(
-                    credentialsId: "jenkins-ops-api-credentials",
-                    usernameVariable: "OPS_USER",
-                    passwordVariable: "OPS_PASS"
-                )]) {
-                    sh """
-                        CRUMB=\$(curl -s -u "\${OPS_USER}:\${OPS_PASS}" \\
-                            "\${JENKINS_OPS_URL}/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,\\\":\\\",//crumb)")
-                        curl -f -X POST \\
-                            -u "\${OPS_USER}:\${OPS_PASS}" \\
-                            -H "\${CRUMB}" \\
-                            "\${JENKINS_OPS_URL}/job/\${JENKINS_OPS_JOB}/buildWithParameters\\
-?token=\${JENKINS_OPS_TOKEN}&IMAGE_TAG=dev&ENVIRONMENT=development"
-                    """
-                }
-            }
-        }
-
-        stage("Smoke Test DEV") {
-            when { branch "develop" }
-            steps {
-                withCredentials([file(
-                    credentialsId: "gcp-service-account-key",
-                    variable: "GCP_KEY_FILE"
-                )]) {
-                    sh """
-                        gcloud auth activate-service-account --key-file=\$GCP_KEY_FILE
-                        gcloud container clusters get-credentials \${GKE_CLUSTER} \\
-                          --zone \${GKE_ZONE} --project \${PROJECT_ID}
-                        sleep 60
-                        kubectl port-forward svc/gateway-service 8087:8087 -n circleguard-dev &
-                        sleep 10
-                        for i in \$(seq 1 5); do
-                          curl -sf -X POST http://localhost:8087/api/v1/gate/validate \\
-                            -H 'Content-Type: application/json' \\
-                            -d '{"token":"healthcheck"}' && break
-                          echo "Retry \$i/5..." && sleep 10
-                        done
-                        kill %1 2>/dev/null || true
-                    """
-                }
-            }
-        }
 
         // ════════════════════════════════════════════════════════════════
         // RELEASE/* — build + unit + integration + push :staging + E2E

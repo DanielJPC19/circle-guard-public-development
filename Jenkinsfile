@@ -63,11 +63,21 @@ pipeline {
         stage("Trigger OPS — DEV") {
             when { branch "develop" }
             steps {
-                sh """
-                    curl -f -X POST \\
-                      "\${JENKINS_OPS_URL}/job/\${JENKINS_OPS_JOB}/buildWithParameters\\
+                withCredentials([usernamePassword(
+                    credentialsId: "jenkins-ops-api-credentials",
+                    usernameVariable: "OPS_USER",
+                    passwordVariable: "OPS_PASS"
+                )]) {
+                    sh """
+                        CRUMB=\$(curl -s -u "\${OPS_USER}:\${OPS_PASS}" \\
+                            "\${JENKINS_OPS_URL}/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,\\\":\\\",//crumb)")
+                        curl -f -X POST \\
+                            -u "\${OPS_USER}:\${OPS_PASS}" \\
+                            -H "\${CRUMB}" \\
+                            "\${JENKINS_OPS_URL}/job/\${JENKINS_OPS_JOB}/buildWithParameters\\
 ?token=\${JENKINS_OPS_TOKEN}&IMAGE_TAG=dev&ENVIRONMENT=development"
-                """
+                    """
+                }
             }
         }
 
@@ -154,11 +164,21 @@ pipeline {
         stage("Trigger OPS — STAGE") {
             when { branch pattern: "release/.*", comparator: "REGEXP" }
             steps {
-                sh """
-                    curl -f -X POST \\
-                      "\${JENKINS_OPS_URL}/job/\${JENKINS_OPS_JOB}/buildWithParameters\\
+                withCredentials([usernamePassword(
+                    credentialsId: "jenkins-ops-api-credentials",
+                    usernameVariable: "OPS_USER",
+                    passwordVariable: "OPS_PASS"
+                )]) {
+                    sh """
+                        CRUMB=\$(curl -s -u "\${OPS_USER}:\${OPS_PASS}" \\
+                            "\${JENKINS_OPS_URL}/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,\\\":\\\",//crumb)")
+                        curl -f -X POST \\
+                            -u "\${OPS_USER}:\${OPS_PASS}" \\
+                            -H "\${CRUMB}" \\
+                            "\${JENKINS_OPS_URL}/job/\${JENKINS_OPS_JOB}/buildWithParameters\\
 ?token=\${JENKINS_OPS_TOKEN}&IMAGE_TAG=staging&ENVIRONMENT=staging"
-                """
+                    """
+                }
             }
         }
 
@@ -347,11 +367,21 @@ ${serviceList}
         stage("Trigger OPS — PROD") {
             when { branch "master" }
             steps {
-                sh """
-                    curl -f -X POST \\
-                      "\${JENKINS_OPS_URL}/job/\${JENKINS_OPS_JOB}/buildWithParameters\\
+                withCredentials([usernamePassword(
+                    credentialsId: "jenkins-ops-api-credentials",
+                    usernameVariable: "OPS_USER",
+                    passwordVariable: "OPS_PASS"
+                )]) {
+                    sh """
+                        CRUMB=\$(curl -s -u "\${OPS_USER}:\${OPS_PASS}" \\
+                            "\${JENKINS_OPS_URL}/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,\\\":\\\",//crumb)")
+                        curl -f -X POST \\
+                            -u "\${OPS_USER}:\${OPS_PASS}" \\
+                            -H "\${CRUMB}" \\
+                            "\${JENKINS_OPS_URL}/job/\${JENKINS_OPS_JOB}/buildWithParameters\\
 ?token=\${JENKINS_OPS_TOKEN}&IMAGE_TAG=${env.SHORT_SHA}&ENVIRONMENT=production"
-                """
+                    """
+                }
             }
         }
 

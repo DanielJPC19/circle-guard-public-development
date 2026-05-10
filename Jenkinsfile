@@ -7,7 +7,7 @@ pipeline {
         GKE_ZONE          = "us-central1-a"
         PROJECT_ID        = "ingesoft-v"
         JENKINS_OPS_URL   = "http://35.239.155.232:9090"
-        JENKINS_OPS_JOB   = "circle-guard-ingesoftv/circle-guard-ingesoftv-production-pipeline"
+        JENKINS_OPS_JOB   = "circle-guard-ingesoftv/job/circle-guard-ingesoftv-production-pipeline"
         JENKINS_OPS_TOKEN = "circleguard-cd-trigger"
         SERVICES          = "auth-service identity-service promotion-service gateway-service notification-service form-service"
     }

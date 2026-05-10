@@ -41,7 +41,7 @@ pipeline {
                     usernameVariable: "DOCKER_USER",
                     passwordVariable: "DOCKER_PASS"
                 )]) {
-                    sh "docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}"
+                    sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
                     script {
                         env.SERVICES.split(" ").each { svc ->
                             sh """
@@ -133,7 +133,7 @@ pipeline {
                     usernameVariable: "DOCKER_USER",
                     passwordVariable: "DOCKER_PASS"
                 )]) {
-                    sh "docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}"
+                    sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
                     script {
                         env.SERVICES.split(" ").each { svc ->
                             sh """
@@ -240,7 +240,7 @@ pipeline {
                             returnStdout: true
                         ).trim()
                     }
-                    sh "docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}"
+                    sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
                     script {
                         env.SERVICES.split(" ").each { svc ->
                             sh """

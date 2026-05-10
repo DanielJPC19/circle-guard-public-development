@@ -25,6 +25,20 @@ public class CircleGuardE2ETest {
     private static String officialAnonymousId = "";
     private static String lastQrToken      = "";
 
+    @BeforeAll
+    static void checkServicesAvailable() {
+        try {
+            var uri = java.net.URI.create(AUTH_URL);
+            int port = uri.getPort() == -1 ? 80 : uri.getPort();
+            try (var s = new java.net.Socket()) {
+                s.connect(new java.net.InetSocketAddress(uri.getHost(), port), 3000);
+            }
+        } catch (Exception e) {
+            Assumptions.assumeTrue(false,
+                "Auth service unreachable at " + AUTH_URL + " — start docker-compose.test.yml first");
+        }
+    }
+
     // ── Test 1: Auth flow + QR generation ───────────────────────────────────
     @Test
     @Order(1)

@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_USER    = "dadnieljpc1119"
+        DOCKERHUB_USER    = "danieljpc1119"
         GKE_CLUSTER       = "kubernetes-instance-circle-guard"
         GKE_ZONE          = "us-central1-a"
         PROJECT_ID        = "ingesoft-v"

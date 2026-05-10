@@ -70,7 +70,7 @@ pipeline {
                     sh """
                         curl -f -u "jenkins:\${OPS_TOKEN}" \\
                           "\${JENKINS_OPS_URL}/job/\${JENKINS_OPS_JOB}/buildWithParameters\
-?token=\${JENKINS_OPS_TOKEN}&IMAGE_TAG=dev&ENVIRONMENT=dev"
+?token=\${JENKINS_OPS_TOKEN}&IMAGE_TAG=dev&ENVIRONMENT=development"
                     """
                 }
             }
@@ -166,7 +166,7 @@ pipeline {
                     sh """
                         curl -f -u "jenkins:\${OPS_TOKEN}" \\
                           "\${JENKINS_OPS_URL}/job/\${JENKINS_OPS_JOB}/buildWithParameters\
-?token=\${JENKINS_OPS_TOKEN}&IMAGE_TAG=staging&ENVIRONMENT=stage"
+?token=\${JENKINS_OPS_TOKEN}&IMAGE_TAG=staging&ENVIRONMENT=staging"
                     """
                 }
             }
@@ -364,7 +364,7 @@ ${serviceList}
                     sh """
                         curl -f -u "jenkins:\${OPS_TOKEN}" \\
                           "\${JENKINS_OPS_URL}/job/\${JENKINS_OPS_JOB}/buildWithParameters\
-?token=\${JENKINS_OPS_TOKEN}&IMAGE_TAG=${env.SHORT_SHA}&ENVIRONMENT=prod"
+?token=\${JENKINS_OPS_TOKEN}&IMAGE_TAG=${env.SHORT_SHA}&ENVIRONMENT=production"
                     """
                 }
             }

@@ -6,7 +6,7 @@ pipeline {
         GKE_CLUSTER       = "kubernetes-instance-circle-guard"
         GKE_ZONE          = "us-central1-a"
         PROJECT_ID        = "ingesoft-v"
-        JENKINS_OPS_URL   = "http://35.239.155.232:8080"
+        JENKINS_OPS_URL   = "http://35.239.155.232:9090"
         JENKINS_OPS_JOB   = "circleguard-cd-infra"
         JENKINS_OPS_TOKEN = "circleguard-cd-trigger"
         SERVICES          = "auth-service identity-service promotion-service gateway-service notification-service form-service"

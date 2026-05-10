@@ -125,13 +125,15 @@ services:
       SPRING_LDAP_PASSWORD: admin
       JWT_SECRET: my-super-secret-dev-key-32-chars-long-12345678
       JWT_EXPIRATION: 3600000
+      QR_SECRET: my-qr-secret-key-for-dev-1234567890
+      QR_EXPIRATION: 300000
     depends_on:
       postgres:
         condition: service_healthy
       openldap:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:8180/actuator/health || exit 1"]
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8180/api/v1/users/permissions/healthcheck || exit 1"]
       interval: 15s
       timeout: 10s
       retries: 8
@@ -156,7 +158,7 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:8083/actuator/health || exit 1"]
+      test: ["CMD-SHELL", "wget -q -O /dev/null --header='Content-Type: application/json' --post-data='{\"realIdentity\":\"hc\"}' http://localhost:8083/api/v1/identities/map || exit 1"]
       interval: 15s
       timeout: 10s
       retries: 8
@@ -191,7 +193,7 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:8088/actuator/health || exit 1"]
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8088/api/v1/health-status/stats || exit 1"]
       interval: 15s
       timeout: 10s
       retries: 8
@@ -210,12 +212,12 @@ services:
       JWT_SECRET: my-super-secret-dev-key-32-chars-long-12345678
       JWT_EXPIRATION: 3600000
       QR_SECRET: my-qr-secret-key-for-dev-1234567890
-      QR_EXPIRATION: 300
+      QR_EXPIRATION: 300000
     depends_on:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:8087/actuator/health || exit 1"]
+      test: ["CMD-SHELL", "wget -q -O /dev/null --header='Content-Type: application/json' --post-data='{\"token\":\"hc\"}' http://localhost:8087/api/v1/gate/validate || exit 1"]
       interval: 15s
       timeout: 10s
       retries: 8
@@ -259,7 +261,7 @@ services:
       kafka:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:8086/actuator/health || exit 1"]
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8086/api/v1/questionnaires || exit 1"]
       interval: 15s
       timeout: 10s
       retries: 8

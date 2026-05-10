@@ -104,3 +104,9 @@ subprojects {
         useJUnitPlatform()
     }
 }
+
+tasks.register("e2eTest") {
+    description = "Runs E2E tests against a deployed CircleGuard instance (defaults to localhost ports)"
+    group = "verification"
+    dependsOn(":tests:e2e:test")
+}

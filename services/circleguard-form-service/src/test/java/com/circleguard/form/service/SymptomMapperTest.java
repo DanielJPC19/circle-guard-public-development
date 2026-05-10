@@ -37,6 +37,19 @@ class SymptomMapperTest {
     }
 
     @Test
+    void shouldNotDetectSymptomsWhenResponsesAreNull() {
+        Questionnaire questionnaire = Questionnaire.builder()
+                .questions(List.of())
+                .build();
+
+        HealthSurvey survey = HealthSurvey.builder()
+                .responses(null)
+                .build();
+
+        assertFalse(mapper.hasSymptoms(survey, questionnaire));
+    }
+
+    @Test
     void shouldNotDetectSymptomsWhenNo() {
         UUID questionId = UUID.randomUUID();
         Question q = Question.builder()

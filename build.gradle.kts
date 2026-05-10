@@ -37,6 +37,62 @@ subprojects {
         "testRuntimeOnly"("com.h2database:h2")
     }
 
+    // ── Integration Test Source Set ──────────────────────────
+    val sourceSets = the<SourceSetContainer>()
+    val configs = configurations
+
+    val integrationTestSourceSet = sourceSets.create("integrationTest") {
+        java.srcDir("src/integrationTest/kotlin")
+        resources.srcDir("src/integrationTest/resources")
+    }
+    integrationTestSourceSet.compileClasspath +=
+        sourceSets["main"].output + configs["testRuntimeClasspath"]
+    integrationTestSourceSet.runtimeClasspath +=
+        integrationTestSourceSet.output + integrationTestSourceSet.compileClasspath
+
+    val integrationTestImplementation by configurations.getting {
+        extendsFrom(configurations["testImplementation"])
+    }
+    val integrationTestRuntimeOnly by configurations.getting {
+        extendsFrom(configurations["testRuntimeOnly"])
+    }
+
+    configurations.named("integrationTestRuntimeClasspath") {
+        resolutionStrategy.force(
+            "org.testcontainers:testcontainers:1.21.0",
+            "org.testcontainers:junit-jupiter:1.21.0",
+            "org.testcontainers:postgresql:1.21.0",
+            "org.testcontainers:neo4j:1.21.0",
+            "com.github.docker-java:docker-java-api:3.4.1",
+            "com.github.docker-java:docker-java-transport:3.4.1",
+            "com.github.docker-java:docker-java-transport-zerodep:3.4.1"
+        )
+    }
+
+    dependencies {
+        "integrationTestImplementation"("org.testcontainers:testcontainers:1.21.0")
+        "integrationTestImplementation"("org.testcontainers:junit-jupiter:1.21.0")
+        "integrationTestImplementation"("org.testcontainers:postgresql:1.21.0")
+        "integrationTestImplementation"("org.testcontainers:neo4j:1.21.0")
+    }
+
+    tasks.register<Test>("integrationTest") {
+        description = "Runs integration tests with Testcontainers"
+        group = "verification"
+        testClassesDirs = integrationTestSourceSet.output.classesDirs
+        classpath = integrationTestSourceSet.runtimeClasspath
+        useJUnitPlatform()
+        shouldRunAfter(tasks.named("test"))
+        environment("DOCKER_HOST", "unix:///var/run/docker.sock")
+        environment("DOCKER_API_VERSION", "1.44")
+        systemProperties(mapOf(
+            "docker.host" to "unix:///var/run/docker.sock",
+            "docker.api.version" to "1.44",
+            "testcontainers.docker.api.version" to "1.44",
+            "testcontainers.ryuk.disabled" to "true"
+        ))
+    }
+
     tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
         kotlinOptions {
             freeCompilerArgs = listOf("-Xjsr305=strict")

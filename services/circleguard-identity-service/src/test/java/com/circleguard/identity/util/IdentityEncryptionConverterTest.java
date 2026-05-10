@@ -32,4 +32,12 @@ public class IdentityEncryptionConverterTest {
         assertNull(converter.convertToDatabaseColumn(null));
         assertNull(converter.convertToEntityAttribute(null));
     }
+
+    @Test
+    void differentPlaintextInputsProduceDifferentCiphertext() {
+        byte[] encrypted1 = converter.convertToDatabaseColumn("user1@university.edu");
+        byte[] encrypted2 = converter.convertToDatabaseColumn("user2@university.edu");
+
+        assertFalse(java.util.Arrays.equals(encrypted1, encrypted2));
+    }
 }

@@ -147,24 +147,32 @@ pipeline {
                         gcloud auth activate-service-account --key-file=\$GCP_KEY_FILE
                         gcloud container clusters get-credentials \${GKE_CLUSTER} \\
                           --zone \${GKE_ZONE} --project \${PROJECT_ID}
-                        echo "==> Esperando que auth-service y gateway-service estén disponibles en circleguard-stage (max 20 min)..."
-                        for i in \$(seq 1 40); do
-                          AUTH_READY=\$(kubectl get deployment auth-service -n circleguard-stage \\
-                            -o jsonpath='{.status.availableReplicas}' 2>/dev/null || echo "0")
-                          GW_READY=\$(kubectl get deployment gateway-service -n circleguard-stage \\
-                            -o jsonpath='{.status.availableReplicas}' 2>/dev/null || echo "0")
-                          if [ "\${AUTH_READY:-0}" -ge 1 ] && [ "\${GW_READY:-0}" -ge 1 ]; then
-                            echo "==> Servicios disponibles (auth=\${AUTH_READY}, gateway=\${GW_READY}). Iniciando E2E..."
-                            break
+                        echo "==> Esperando que los 4 servicios E2E estén estables en circleguard-stage (max 25 min)..."
+                        STABLE=0
+                        for i in \$(seq 1 50); do
+                          AUTH_READY=\$(kubectl get deployment auth-service    -n circleguard-stage -o jsonpath='{.status.availableReplicas}' 2>/dev/null || echo "0")
+                          GW_READY=\$(kubectl get deployment gateway-service   -n circleguard-stage -o jsonpath='{.status.availableReplicas}' 2>/dev/null || echo "0")
+                          FORM_READY=\$(kubectl get deployment form-service    -n circleguard-stage -o jsonpath='{.status.availableReplicas}' 2>/dev/null || echo "0")
+                          PROM_READY=\$(kubectl get deployment promotion-service -n circleguard-stage -o jsonpath='{.status.availableReplicas}' 2>/dev/null || echo "0")
+                          if [ "\${AUTH_READY:-0}" -ge 1 ] && [ "\${GW_READY:-0}" -ge 1 ] && [ "\${FORM_READY:-0}" -ge 1 ] && [ "\${PROM_READY:-0}" -ge 1 ]; then
+                            STABLE=\$((STABLE + 1))
+                            echo "==> Intento \$i: todos disponibles (auth=\${AUTH_READY}, gw=\${GW_READY}, form=\${FORM_READY}, prom=\${PROM_READY}) — estabilidad \${STABLE}/3"
+                            if [ \$STABLE -ge 3 ]; then
+                              echo "==> Servicios estables. Iniciando E2E..."
+                              break
+                            fi
+                            sleep 20
+                          else
+                            STABLE=0
+                            echo "==> Intento \$i/50 (auth=\${AUTH_READY:-0}, gw=\${GW_READY:-0}, form=\${FORM_READY:-0}, prom=\${PROM_READY:-0}) — esperando 30s..."
+                            sleep 30
                           fi
-                          echo "==> Intento \$i/40 (auth=\${AUTH_READY:-0}, gateway=\${GW_READY:-0}) — esperando 30s..."
-                          sleep 30
                         done
                         kubectl port-forward svc/auth-service      8180:8180 -n circleguard-stage &
                         kubectl port-forward svc/gateway-service   8087:8087 -n circleguard-stage &
                         kubectl port-forward svc/promotion-service 8088:8088 -n circleguard-stage &
                         kubectl port-forward svc/form-service      8086:8086 -n circleguard-stage &
-                        sleep 15
+                        sleep 90
                         ./gradlew e2eTest \\
                           -De2e.auth.url=http://localhost:8180 \\
                           -De2e.gateway.url=http://localhost:8087 \\

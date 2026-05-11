@@ -4,7 +4,7 @@ import random
 import time
 import uuid
 
-from locust import HttpUser, between, task, events
+from locust import HttpUser, between, task
 
 AUTH_URL      = os.environ.get("AUTH_URL",      "http://localhost:8180")
 GATEWAY_URL   = os.environ.get("GATEWAY_URL",   "http://localhost:8087")
@@ -13,25 +13,6 @@ FORM_URL      = os.environ.get("FORM_URL",      "http://localhost:8086")
 
 MAX_RETRIES = 3
 RETRY_BACKOFF = 0.5
-
-
-def retry_on_error(max_retries=MAX_RETRIES, backoff=RETRY_BACKOFF):
-    def decorator(func):
-        def wrapper(self, *args, **kwargs):
-            last_response = None
-            for attempt in range(max_retries):
-                response = func(self, *args, **kwargs)
-                last_response = response
-                if response.status_code in (200, 201, 204):
-                    return response
-                if response.status_code in (503, 403, 401) and attempt < max_retries - 1:
-                    time.sleep(backoff * (attempt + 1))
-                    if response.status_code in (401, 403):
-                        self.refresh_token()
-                continue
-            return last_response
-        return wrapper
-    return decorator
 
 
 class BaseUser(HttpUser):

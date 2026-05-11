@@ -411,7 +411,7 @@ ${serviceList}
                         git config user.email "jenkins@circleguard.edu"
                         git config user.name "Jenkins CI"
                         git tag v${BUILD_NUMBER}
-                        git push https://\${GIT_USER}:\${GIT_PASS}@github.com/TU_USUARIO/circle-guard-public.git \\
+                        git push https://\${GIT_USER}:\${GIT_PASS}@github.com/\${GIT_USER}/circle-guard-public.git \\
                           v${BUILD_NUMBER}
                     """
                 }

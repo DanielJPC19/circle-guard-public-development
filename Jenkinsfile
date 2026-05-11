@@ -21,7 +21,7 @@ pipeline {
         stage("Build [develop]") {
             when { branch "develop" }
             steps {
-                sh "./gradlew build -x test --no-daemon"
+                sh "./gradlew build -x test integrationTest e2eTest --no-daemon"
             }
         }
 
@@ -68,7 +68,7 @@ pipeline {
         stage("Build [release]") {
             when { branch pattern: "release/.*", comparator: "REGEXP" }
             steps {
-                sh "./gradlew build -x test --no-daemon"
+                sh "./gradlew build -x test integrationTest e2eTest --no-daemon"
             }
         }
 
@@ -239,7 +239,7 @@ pipeline {
         stage("Build [master]") {
             when { branch "master" }
             steps {
-                sh "./gradlew build -x test --no-daemon"
+                sh "./gradlew build -x test integrationTest e2eTest --no-daemon"
             }
         }
 

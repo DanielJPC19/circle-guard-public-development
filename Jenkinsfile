@@ -21,7 +21,7 @@ pipeline {
         stage("Build [develop]") {
             when { branch "develop" }
             steps {
-                sh "./gradlew build -x test --no-daemon"
+                sh "./gradlew build -x test integrationTest e2eTest --no-daemon"
             }
         }
 
@@ -68,7 +68,7 @@ pipeline {
         stage("Build [release]") {
             when { branch pattern: "release/.*", comparator: "REGEXP" }
             steps {
-                sh "./gradlew build -x test --no-daemon"
+                sh "./gradlew build -x test integrationTest e2eTest --no-daemon"
             }
         }
 
@@ -239,7 +239,7 @@ pipeline {
         stage("Build [master]") {
             when { branch "master" }
             steps {
-                sh "./gradlew build -x test --no-daemon"
+                sh "./gradlew build -x test integrationTest e2eTest --no-daemon"
             }
         }
 
@@ -316,7 +316,8 @@ pipeline {
                                GATEWAY_URL=http://localhost:8087 \\
                                PROMOTION_URL=http://localhost:8088 \\
                                FORM_URL=http://localhost:8086
-                        pip install locust --quiet
+                        export PATH="$HOME/.local/bin:$PATH"
+                        pip3 install locust --user --quiet || pip3 install locust --quiet
                         bash tests/performance/run_locust.sh
                         kill %1 %2 %3 %4 2>/dev/null || true
                     """

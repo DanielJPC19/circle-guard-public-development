@@ -147,7 +147,19 @@ pipeline {
                         gcloud auth activate-service-account --key-file=\$GCP_KEY_FILE
                         gcloud container clusters get-credentials \${GKE_CLUSTER} \\
                           --zone \${GKE_ZONE} --project \${PROJECT_ID}
-                        sleep 90
+                        echo "==> Esperando que auth-service y gateway-service estén disponibles en circleguard-stage (max 20 min)..."
+                        for i in \$(seq 1 40); do
+                          AUTH_READY=\$(kubectl get deployment auth-service -n circleguard-stage \\
+                            -o jsonpath='{.status.availableReplicas}' 2>/dev/null || echo "0")
+                          GW_READY=\$(kubectl get deployment gateway-service -n circleguard-stage \\
+                            -o jsonpath='{.status.availableReplicas}' 2>/dev/null || echo "0")
+                          if [ "\${AUTH_READY:-0}" -ge 1 ] && [ "\${GW_READY:-0}" -ge 1 ]; then
+                            echo "==> Servicios disponibles (auth=\${AUTH_READY}, gateway=\${GW_READY}). Iniciando E2E..."
+                            break
+                          fi
+                          echo "==> Intento \$i/40 (auth=\${AUTH_READY:-0}, gateway=\${GW_READY:-0}) — esperando 30s..."
+                          sleep 30
+                        done
                         kubectl port-forward svc/auth-service      8180:8180 -n circleguard-stage &
                         kubectl port-forward svc/gateway-service   8087:8087 -n circleguard-stage &
                         kubectl port-forward svc/promotion-service 8088:8088 -n circleguard-stage &

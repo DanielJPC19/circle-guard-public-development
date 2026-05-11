@@ -316,8 +316,6 @@ pipeline {
                                GATEWAY_URL=http://localhost:8087 \\
                                PROMOTION_URL=http://localhost:8088 \\
                                FORM_URL=http://localhost:8086
-                        export PATH="$HOME/.local/bin:$PATH"
-                        pip3 install locust --user --quiet || pip3 install locust --quiet
                         bash tests/performance/run_locust.sh
                         kill %1 %2 %3 %4 2>/dev/null || true
                     """

@@ -3,6 +3,7 @@ package com.circleguard.promotion
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
+import org.neo4j.driver.Driver
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.kafka.core.KafkaTemplate
@@ -31,6 +32,9 @@ import java.util.UUID
     "spring.data.redis.port=6379"
 ])
 class PromotionIntegrationTest {
+
+    @MockBean
+    lateinit var neo4jDriver: Driver
 
     @MockBean
     lateinit var kafkaTemplate: KafkaTemplate<String, Any>

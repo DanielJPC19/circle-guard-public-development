@@ -41,6 +41,7 @@ class GatewayIntegrationTest {
         }
 
         @JvmStatic
+        @org.springframework.test.context.DynamicPropertySource
         fun configureProperties(registry: org.springframework.test.context.DynamicPropertyRegistry) {
             registry.add("spring.data.redis.host") { redis.host }
             registry.add("spring.data.redis.port") { redis.getMappedPort(6379).toString() }

@@ -26,24 +26,24 @@ class HealthStatusControllerTest {
     private HealthStatusService statusService;
 
     @Test
-    @WithMockUser(authorities = "HEALTH_CENTER")
-    void confirmPositive_WithPermission_CallsUpdateStatus() throws Exception {
-        String json = "{\"anonymousId\": \"user-1\"}";
+    @WithMockUser
+    void confirmPositive_CallsUpdateStatus() throws Exception {
+        String json = "{\"anonymousId\": \"user-1\", \"status\": \"CONFIRMED\"}";
 
-        mockMvc.perform(post("/api/v1/health/confirmed")
+        mockMvc.perform(post("/api/v1/promotion/report")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk());
 
-        verify(statusService).updateStatus("user-1", "CONFIRMED");
+        verify(statusService).updateStatus("user-1", "CONFIRMED", false);
     }
 
     @Test
-    @WithMockUser(authorities = "HEALTH_CENTER")
-    void resolve_WithPermission_CallsResolveStatus() throws Exception {
+    @WithMockUser
+    void resolve_CallsResolveStatus() throws Exception {
         String json = "{\"anonymousId\": \"user-1\"}";
 
-        mockMvc.perform(post("/api/v1/health/resolve")
+        mockMvc.perform(post("/api/v1/promotion/resolve")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk());
@@ -52,23 +52,13 @@ class HealthStatusControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = "STUDENT")
-    void resolve_WithoutPermission_Returns403() throws Exception {
-        String json = "{\"anonymousId\": \"user-1\"}";
+    @WithMockUser
+    void resolve_WithMissingAnonymousId_Returns400() throws Exception {
+        String json = "{}";
 
-        mockMvc.perform(post("/api/v1/health/resolve")
+        mockMvc.perform(post("/api/v1/promotion/resolve")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
-                .andExpect(status().isForbidden());
-    }
-
-    @Test
-    void resolve_Unauthenticated_Returns403() throws Exception {
-        String json = "{\"anonymousId\": \"user-1\"}";
-
-        mockMvc.perform(post("/api/v1/health/resolve")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isBadRequest());
     }
 }

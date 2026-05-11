@@ -49,3 +49,6 @@ neo4jdata/
 
 # Environment Variables
 .env
+
+# Performance test reports (generated at runtime)
+tests/performance/reports/

@@ -126,11 +126,52 @@ pipeline {
                     sh """
                         CRUMB=\$(curl -s -u "\${OPS_USER}:\${OPS_PASS}" \\
                             "\${JENKINS_OPS_URL}/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,\\\":\\\",//crumb)")
-                        curl -f -X POST \\
+
+                        echo "==> Disparando OPS pipeline para staging..."
+                        QUEUE_URL=\$(curl -s -X POST \\
                             -u "\${OPS_USER}:\${OPS_PASS}" \\
                             -H "\${CRUMB}" \\
-                            "\${JENKINS_OPS_URL}/job/\${JENKINS_OPS_JOB}/buildWithParameters\\
-?token=\${JENKINS_OPS_TOKEN}&IMAGE_TAG=staging&ENVIRONMENT=staging"
+                            -D - -o /dev/null \\
+                            "\${JENKINS_OPS_URL}/job/\${JENKINS_OPS_JOB}/buildWithParameters?token=\${JENKINS_OPS_TOKEN}&IMAGE_TAG=staging&ENVIRONMENT=staging" \\
+                            | grep -i "^location:" | awk '{print \$2}' | tr -d '\\r\\n')
+
+                        echo "==> Queue item: \${QUEUE_URL}"
+
+                        BUILD_URL=""
+                        for i in \$(seq 1 24); do
+                            ITEM_JSON=\$(curl -sf -u "\${OPS_USER}:\${OPS_PASS}" "\${QUEUE_URL}api/json" 2>/dev/null || echo "{}")
+                            BUILD_URL=\$(echo "\${ITEM_JSON}" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('executable',{}).get('url',''))" 2>/dev/null || echo "")
+                            if [ -n "\${BUILD_URL}" ]; then
+                                echo "==> OPS build iniciado: \${BUILD_URL}"
+                                break
+                            fi
+                            echo "==> Esperando que OPS build empiece... intento \${i}/24"
+                            sleep 10
+                        done
+
+                        if [ -z "\${BUILD_URL}" ]; then
+                            echo "ERROR: OPS build no inició en 4 minutos"
+                            exit 1
+                        fi
+
+                        echo "==> Esperando que OPS build complete (max 45 min)..."
+                        OPS_RESULT=""
+                        for i in \$(seq 1 90); do
+                            OPS_RESULT=\$(curl -sf -u "\${OPS_USER}:\${OPS_PASS}" "\${BUILD_URL}api/json" \\
+                                | python3 -c "import sys,json; d=json.load(sys.stdin); r=d.get('result'); print(r if r else '')" 2>/dev/null || echo "")
+                            if [ -n "\${OPS_RESULT}" ]; then
+                                echo "==> OPS build completó: \${OPS_RESULT}"
+                                break
+                            fi
+                            echo "==> OPS en progreso... intento \${i}/90"
+                            sleep 30
+                        done
+
+                        if [ "\${OPS_RESULT}" != "SUCCESS" ]; then
+                            echo "ERROR: OPS pipeline no fue exitoso (resultado: \${OPS_RESULT})"
+                            exit 1
+                        fi
+                        echo "==> OPS staging completado. Procediendo con E2E..."
                     """
                 }
             }

@@ -307,10 +307,10 @@ pipeline {
                         gcloud auth activate-service-account --key-file=\$GCP_KEY_FILE
                         gcloud container clusters get-credentials \${GKE_CLUSTER} \\
                           --zone \${GKE_ZONE} --project \${PROJECT_ID}
-                        kubectl port-forward svc/auth-service      8180:8180 -n circleguard-stage &
-                        kubectl port-forward svc/gateway-service   8087:8087 -n circleguard-stage &
-                        kubectl port-forward svc/promotion-service 8088:8088 -n circleguard-stage &
-                        kubectl port-forward svc/form-service      8086:8086 -n circleguard-stage &
+                        kubectl port-forward svc/auth-service      8180:8180 -n circleguard-prod &
+                        kubectl port-forward svc/gateway-service   8087:8087 -n circleguard-prod &
+                        kubectl port-forward svc/promotion-service 8088:8088 -n circleguard-prod &
+                        kubectl port-forward svc/form-service      8086:8086 -n circleguard-prod &
                         sleep 15
                         export AUTH_URL=http://localhost:8180 \\
                                GATEWAY_URL=http://localhost:8087 \\

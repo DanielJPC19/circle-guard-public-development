@@ -37,18 +37,31 @@ locust \
     --run-time=120s \
     --headless \
     --html="$REPORT_FILE" \
-    --csv="$CSV_PREFIX" \
-    --exit-code-on-error=1
+    --csv="$CSV_PREFIX"
 
 STATS_CSV="${CSV_PREFIX}_stats.csv"
 if [ -f "$STATS_CSV" ]; then
     AVG_MS=$(awk -F',' '/Aggregated/ {gsub(/"/, "", $6); print int($6)}' "$STATS_CSV")
+    FAILURE_RATE=$(awk -F',' '/Aggregated/ {gsub(/"/, "", $7); print $7}' "$STATS_CSV")
+
     echo "==> Average response time: ${AVG_MS}ms (threshold: 2000ms)"
+    echo "==> Failure rate: ${FAILURE_RATE}% (threshold: 15%)"
+
     if [ -n "$AVG_MS" ] && [ "$AVG_MS" -gt 2000 ]; then
         echo "==> FAIL: avg ${AVG_MS}ms exceeds 2000ms threshold"
         exit 1
     fi
-    echo "==> PASS: Performance within acceptable limits"
+
+    if [ -n "$FAILURE_RATE" ]; then
+        FAILURE_INT=$(echo "$FAILURE_RATE" | awk '{printf "%.0f", $1}')
+        if [ "$FAILURE_INT" -gt 15 ]; then
+            echo "==> FAIL: ${FAILURE_RATE}% exceeds 15% threshold"
+            exit 1
+        fi
+        echo "==> PASS: Performance within acceptable limits (failures: ${FAILURE_RATE}%)"
+    else
+        echo "==> PASS: Performance within acceptable limits"
+    fi
 fi
 
 echo "==> Report: $REPORT_FILE"

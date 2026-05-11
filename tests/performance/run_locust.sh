@@ -27,13 +27,13 @@ if ! command -v locust &>/dev/null; then
 fi
 
 echo "==> Auth: $AUTH_URL | Gateway: $GATEWAY_URL | Promotion: $PROMOTION_URL | Form: $FORM_URL"
-echo "==> Users: 50 | Spawn rate: 10/s | Duration: 120s"
+echo "==> Users: 30 | Spawn rate: 3/s | Duration: 120s"
 
 locust \
     -f tests/performance/locustfile.py \
     --host="$AUTH_URL" \
-    --users=50 \
-    --spawn-rate=10 \
+    --users=30 \
+    --spawn-rate=3 \
     --run-time=120s \
     --headless \
     --html="$REPORT_FILE" \

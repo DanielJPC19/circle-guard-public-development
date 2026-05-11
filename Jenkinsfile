@@ -126,11 +126,52 @@ pipeline {
                     sh """
                         CRUMB=\$(curl -s -u "\${OPS_USER}:\${OPS_PASS}" \\
                             "\${JENKINS_OPS_URL}/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,\\\":\\\",//crumb)")
-                        curl -f -X POST \\
+
+                        echo "==> Disparando OPS pipeline para staging..."
+                        QUEUE_URL=\$(curl -s -X POST \\
                             -u "\${OPS_USER}:\${OPS_PASS}" \\
                             -H "\${CRUMB}" \\
-                            "\${JENKINS_OPS_URL}/job/\${JENKINS_OPS_JOB}/buildWithParameters\\
-?token=\${JENKINS_OPS_TOKEN}&IMAGE_TAG=staging&ENVIRONMENT=staging"
+                            -D - -o /dev/null \\
+                            "\${JENKINS_OPS_URL}/job/\${JENKINS_OPS_JOB}/buildWithParameters?token=\${JENKINS_OPS_TOKEN}&IMAGE_TAG=staging&ENVIRONMENT=staging" \\
+                            | grep -i "^location:" | awk '{print \$2}' | tr -d '\\r\\n')
+
+                        echo "==> Queue item: \${QUEUE_URL}"
+
+                        BUILD_URL=""
+                        for i in \$(seq 1 24); do
+                            ITEM_JSON=\$(curl -sf -u "\${OPS_USER}:\${OPS_PASS}" "\${QUEUE_URL}api/json" 2>/dev/null || echo "{}")
+                            BUILD_URL=\$(echo "\${ITEM_JSON}" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('executable',{}).get('url',''))" 2>/dev/null || echo "")
+                            if [ -n "\${BUILD_URL}" ]; then
+                                echo "==> OPS build iniciado: \${BUILD_URL}"
+                                break
+                            fi
+                            echo "==> Esperando que OPS build empiece... intento \${i}/24"
+                            sleep 10
+                        done
+
+                        if [ -z "\${BUILD_URL}" ]; then
+                            echo "ERROR: OPS build no inició en 4 minutos"
+                            exit 1
+                        fi
+
+                        echo "==> Esperando que OPS build complete (max 45 min)..."
+                        OPS_RESULT=""
+                        for i in \$(seq 1 90); do
+                            OPS_RESULT=\$(curl -sf -u "\${OPS_USER}:\${OPS_PASS}" "\${BUILD_URL}api/json" \\
+                                | python3 -c "import sys,json; d=json.load(sys.stdin); r=d.get('result'); print(r if r else '')" 2>/dev/null || echo "")
+                            if [ -n "\${OPS_RESULT}" ]; then
+                                echo "==> OPS build completó: \${OPS_RESULT}"
+                                break
+                            fi
+                            echo "==> OPS en progreso... intento \${i}/90"
+                            sleep 30
+                        done
+
+                        if [ "\${OPS_RESULT}" != "SUCCESS" ]; then
+                            echo "ERROR: OPS pipeline no fue exitoso (resultado: \${OPS_RESULT})"
+                            exit 1
+                        fi
+                        echo "==> OPS staging completado. Procediendo con E2E..."
                     """
                 }
             }
@@ -147,12 +188,32 @@ pipeline {
                         gcloud auth activate-service-account --key-file=\$GCP_KEY_FILE
                         gcloud container clusters get-credentials \${GKE_CLUSTER} \\
                           --zone \${GKE_ZONE} --project \${PROJECT_ID}
-                        sleep 90
+                        echo "==> Esperando que los 4 servicios E2E estén estables en circleguard-stage (max 25 min)..."
+                        STABLE=0
+                        for i in \$(seq 1 50); do
+                          AUTH_READY=\$(kubectl get deployment auth-service    -n circleguard-stage -o jsonpath='{.status.availableReplicas}' 2>/dev/null || echo "0")
+                          GW_READY=\$(kubectl get deployment gateway-service   -n circleguard-stage -o jsonpath='{.status.availableReplicas}' 2>/dev/null || echo "0")
+                          FORM_READY=\$(kubectl get deployment form-service    -n circleguard-stage -o jsonpath='{.status.availableReplicas}' 2>/dev/null || echo "0")
+                          PROM_READY=\$(kubectl get deployment promotion-service -n circleguard-stage -o jsonpath='{.status.availableReplicas}' 2>/dev/null || echo "0")
+                          if [ "\${AUTH_READY:-0}" -ge 1 ] && [ "\${GW_READY:-0}" -ge 1 ] && [ "\${FORM_READY:-0}" -ge 1 ] && [ "\${PROM_READY:-0}" -ge 1 ]; then
+                            STABLE=\$((STABLE + 1))
+                            echo "==> Intento \$i: todos disponibles (auth=\${AUTH_READY}, gw=\${GW_READY}, form=\${FORM_READY}, prom=\${PROM_READY}) — estabilidad \${STABLE}/3"
+                            if [ \$STABLE -ge 3 ]; then
+                              echo "==> Servicios estables. Iniciando E2E..."
+                              break
+                            fi
+                            sleep 20
+                          else
+                            STABLE=0
+                            echo "==> Intento \$i/50 (auth=\${AUTH_READY:-0}, gw=\${GW_READY:-0}, form=\${FORM_READY:-0}, prom=\${PROM_READY:-0}) — esperando 30s..."
+                            sleep 30
+                          fi
+                        done
                         kubectl port-forward svc/auth-service      8180:8180 -n circleguard-stage &
                         kubectl port-forward svc/gateway-service   8087:8087 -n circleguard-stage &
                         kubectl port-forward svc/promotion-service 8088:8088 -n circleguard-stage &
                         kubectl port-forward svc/form-service      8086:8086 -n circleguard-stage &
-                        sleep 15
+                        sleep 90
                         ./gradlew e2eTest \\
                           -De2e.auth.url=http://localhost:8180 \\
                           -De2e.gateway.url=http://localhost:8087 \\
